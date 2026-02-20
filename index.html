@@ -1,14 +1,331 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hello World</title>
-  <link href='/style.css' rel='stylesheet'>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Useful Information Car - 내 차 찾기</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+        body { font-family: 'Noto Sans KR', sans-serif; background-color: #f8fafc; }
+        
+        select {
+            -webkit-appearance: none; appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2364748b' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat; background-position: right 1.2rem center; background-size: 1.2em;
+        }
+        
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+        #sidebar { transition: transform 0.3s ease-in-out; }
+        .sidebar-open { transform: translateX(0); }
+        .sidebar-closed { transform: translateX(100%); }
+    </style>
 </head>
-<body>
-  <h1>Hello, world!</h1>
-  <button onclick="console.log('hello');">Press me</button>
-  <script defer type="text/javascript" src="/main.js"></script>
+<body class="antialiased text-gray-800">
+
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-[60] hidden transition-opacity"></div>
+    <div id="sidebar" class="fixed top-0 right-0 h-full w-72 bg-white z-[70] shadow-2xl sidebar-closed flex flex-col">
+        <div class="p-5 flex justify-between items-center border-b border-gray-100 bg-gray-50">
+            <span class="font-bold text-lg text-emerald-600">전체 메뉴</span>
+            <button id="close-sidebar-btn" class="text-gray-500 hover:text-gray-800 text-xl"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="p-4 flex-1 overflow-y-auto">
+            <ul class="space-y-2">
+                <li>
+                    <button id="recent-car-btn" class="w-full flex items-center p-3 text-gray-700 rounded-xl hover:bg-emerald-50 hover:text-emerald-700 transition font-medium">
+                        <i class="fa-solid fa-clock-rotate-left w-6 text-emerald-500 text-center mr-2"></i> 최근 본 차량 가기
+                    </button>
+                </li>
+                <li>
+                    <a href="board.html" class="flex items-center p-3 text-gray-700 rounded-xl hover:bg-emerald-50 hover:text-emerald-700 transition font-medium">
+                        <i class="fa-solid fa-clipboard-list w-6 text-emerald-500 text-center mr-2"></i> 요청사항 게시판
+                    </a>
+                </li>
+                <li>
+                    <button id="open-contact-btn" class="w-full flex items-center p-3 text-gray-700 rounded-xl hover:bg-emerald-50 hover:text-emerald-700 transition font-medium">
+                        <i class="fa-solid fa-envelope w-6 text-blue-500 text-center mr-2"></i> 운영자에게 문의
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div id="contact-modal" class="fixed inset-0 bg-black bg-opacity-50 z-[80] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-xl w-full max-w-sm overflow-hidden transform transition-all">
+            <div class="bg-emerald-500 p-4 text-white flex justify-between items-center">
+                <h3 class="font-bold text-lg"><i class="fa-solid fa-paper-plane mr-2"></i>운영자에게 문의</h3>
+                <button id="close-contact-btn" class="text-white hover:text-gray-200"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <form id="contact-form" class="p-5" onsubmit="event.preventDefault();">
+                <p class="text-[13px] text-gray-500 mb-4">답변을 받으실 이메일 주소와 내용을 남겨주세요. 운영자 이메일로 안전하게 전송됩니다.</p>
+                <div class="space-y-3">
+                    <input type="email" id="contact-email" placeholder="답변 받을 이메일 주소" required class="w-full bg-gray-50 border border-gray-200 text-gray-800 text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block p-3 outline-none">
+                    <input type="text" id="contact-subject" placeholder="문의 제목" required class="w-full bg-gray-50 border border-gray-200 text-gray-800 text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block p-3 outline-none">
+                    <textarea id="contact-msg" rows="4" placeholder="문의 내용을 상세히 적어주세요." required class="w-full bg-gray-50 border border-gray-200 text-gray-800 text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block p-3 outline-none resize-none"></textarea>
+                </div>
+                <button type="submit" id="send-contact-btn" class="w-full text-white bg-emerald-500 hover:bg-emerald-600 font-bold rounded-xl text-sm px-5 py-3.5 mt-4 transition shadow-md flex justify-center items-center">
+                    <span>이메일 앱으로 보내기</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="max-w-2xl mx-auto bg-white min-h-screen relative shadow-xl overflow-x-hidden flex flex-col">
+        
+        <header class="bg-white px-6 py-5 flex justify-between items-center sticky top-0 z-40 shadow-sm rounded-b-3xl mb-2 shrink-0">
+            <div class="font-bold text-[22px] text-emerald-600 tracking-tight flex items-center">
+                <div class="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mr-2.5">
+                    <i class="fa-solid fa-car-side text-lg"></i>
+                </div>
+                Useful Information Car
+            </div>
+            <button id="open-sidebar-btn" class="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center cursor-pointer hover:bg-gray-100 transition shadow-sm outline-none">
+                <i class="fa-solid fa-bars text-gray-500"></i>
+            </button>
+        </header>
+
+        <section class="px-5 py-6 shrink-0">
+            <h1 class="text-2xl font-bold mb-2 text-gray-800 leading-snug">어떤 차량의<br>정보가 궁금하신가요?</h1>
+            <p class="text-[14px] text-gray-500 mb-6">고질병부터 소모품 규격까지 한눈에 확인하세요.</p>
+            
+            <div class="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] p-2 flex flex-col sm:flex-row gap-2 border border-gray-100">
+                <select id="brand-select" class="flex-1 w-full bg-gray-50 text-gray-700 p-4 rounded-2xl border-none focus:ring-2 focus:ring-emerald-100 outline-none text-[15px] font-medium cursor-pointer transition">
+                    <option value="" disabled selected>제조사 선택</option>
+                </select>
+                <select id="model-select" class="flex-1 w-full bg-gray-50 text-gray-700 p-4 rounded-2xl border-none focus:ring-2 focus:ring-emerald-100 outline-none text-[15px] font-medium cursor-pointer transition">
+                    <option value="" disabled selected>모델 선택</option>
+                </select>
+                <select id="gen-select" class="flex-[1.2] w-full bg-gray-50 text-gray-700 p-4 rounded-2xl border-none focus:ring-2 focus:ring-emerald-100 outline-none text-[15px] font-medium cursor-pointer transition">
+                    <option value="" disabled selected>세부 모델 (연식)</option>
+                </select>
+                <button id="search-btn" class="bg-emerald-500 text-white font-bold py-4 px-8 rounded-2xl shadow-md hover:bg-emerald-600 hover:shadow-lg transition-all w-full sm:w-auto text-[16px]">
+                    검색
+                </button>
+            </div>
+        </section>
+
+        <section class="px-5 py-2 mb-4 shrink-0">
+            <h2 class="font-bold text-[16px] text-gray-700 mb-3 ml-1">테마별 인기 검색 👀</h2>
+            <div class="flex flex-wrap gap-2.5">
+                <button onclick="location.href='detail.html?id=audi_c8_45tfsi'" class="bg-emerald-50 text-emerald-700 px-4 py-2 rounded-full text-[13px] font-bold hover:bg-emerald-100 transition shadow-sm">아우디 A6 (C8)</button>
+                <button onclick="location.href='detail.html?id=vw_golf_7th'" class="bg-emerald-50 text-emerald-700 px-4 py-2 rounded-full text-[13px] font-bold hover:bg-emerald-100 transition shadow-sm">폭스바겐 골프 7세대</button>
+                <button class="bg-gray-100 text-gray-600 px-4 py-2 rounded-full text-[13px] font-bold hover:bg-gray-200 transition shadow-sm">#차박하기_좋은_SUV</button>
+            </div>
+        </section>
+
+        <section class="px-5 py-8 bg-gray-50 rounded-t-[40px] mt-2 border-t border-gray-100 flex-1 pb-12">
+            
+            <div class="mb-8">
+                <h2 class="font-bold text-[17px] text-gray-800 mb-4 px-1 flex items-center justify-between">
+                    <span><i class="fa-solid fa-car-side text-blue-500 mr-2 text-sm"></i>최신 오토 트렌드</span>
+                    <span class="text-[10px] text-gray-400 font-normal"><i class="fa-solid fa-rotate mr-1"></i>실시간 자동 업데이트</span>
+                </h2>
+                <div id="auto-news-container" class="space-y-3 px-1">
+                    <div class="animate-pulse flex space-x-4 bg-white p-4 rounded-2xl border border-gray-100">
+                        <div class="flex-1 space-y-3 py-1">
+                            <div class="h-2 bg-gray-200 rounded w-1/4"></div>
+                            <div class="h-2 bg-gray-200 rounded w-3/4"></div>
+                            <div class="h-2 bg-gray-200 rounded w-5/6"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <h2 class="font-bold text-[17px] text-gray-800 mb-4 px-1 flex items-center justify-between">
+                    <span><i class="fa-solid fa-campground text-emerald-500 mr-2 text-sm"></i>드라이브 & 라이프</span>
+                    <span class="text-[10px] text-gray-400 font-normal"><i class="fa-solid fa-rotate mr-1"></i>실시간 자동 업데이트</span>
+                </h2>
+                <div id="life-news-container" class="space-y-3 px-1">
+                    <div class="animate-pulse flex space-x-4 bg-white p-4 rounded-2xl border border-gray-100">
+                        <div class="flex-1 space-y-3 py-1">
+                            <div class="h-2 bg-gray-200 rounded w-1/4"></div>
+                            <div class="h-2 bg-gray-200 rounded w-3/4"></div>
+                            <div class="h-2 bg-gray-200 rounded w-5/6"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="js/data_core.js"></script>
+    <script src="js/data_hyundai.js"></script>
+    <script src="js/data_genesis.js"></script>
+    <script src="js/data_kia.js"></script>
+    <script src="js/data_renault.js"></script>
+    <script src="js/data_chevrolet.js"></script>
+    <script src="js/data_bmw.js"></script>
+    <script src="js/data_benz.js"></script>
+    <script src="js/data_audi.js"></script>
+    <script src="js/data_vw.js"></script>
+    <script src="js/data_volvo.js"></script>
+    <script src="js/data_mini.js"></script>
+    
+    <script>
+        // --- ✨ 1. 실시간 뉴스 자동 업데이트 봇 로직 ✨ ---
+        async function fetchRealTimeNews() {
+            // 구글 뉴스 RSS 피드 URL (키워드 기반 검색)
+            const autoRss = encodeURIComponent('https://news.google.com/rss/search?q=자동차+(신차 OR 결함 OR 리콜)&hl=ko&gl=KR&ceid=KR:ko');
+            const lifeRss = encodeURIComponent('https://news.google.com/rss/search?q=(드라이브 코스 OR 차박 여행)&hl=ko&gl=KR&ceid=KR:ko');
+
+            // rss2json 무료 API를 통해 RSS를 JSON으로 즉시 변환
+            const autoApiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${autoRss}`;
+            const lifeApiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${lifeRss}`;
+
+            try {
+                const [autoRes, lifeRes] = await Promise.all([fetch(autoApiUrl), fetch(lifeApiUrl)]);
+                const autoData = await autoRes.json();
+                const lifeData = await lifeRes.json();
+
+                renderNews('auto-news-container', autoData.items.slice(0, 3), 'blue', '오토 뉴스');
+                renderNews('life-news-container', lifeData.items.slice(0, 3), 'emerald', '라이프 매거진');
+            } catch (error) {
+                // 통신 실패 시 대체 텍스트
+                document.getElementById('auto-news-container').innerHTML = '<p class="text-[13px] text-gray-500 text-center py-4">최신 기사를 불러오지 못했습니다.</p>';
+                document.getElementById('life-news-container').innerHTML = '<p class="text-[13px] text-gray-500 text-center py-4">최신 기사를 불러오지 못했습니다.</p>';
+            }
+        }
+
+        function renderNews(containerId, items, color, tagText) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = ''; // 스켈레톤(로딩 UI) 제거
+
+            items.forEach(item => {
+                // 구글 뉴스는 제목 끝에 " - 언론사" 가 붙어 나오는 것을 잘라냄
+                let title = item.title;
+                let publisher = item.source || "자동차 매거진";
+                if(title.includes(' - ')) {
+                    const parts = title.split(' - ');
+                    publisher = parts.pop();
+                    title = parts.join(' - ');
+                }
+
+                const pubDate = item.pubDate.split(' ')[0]; // 날짜만 추출
+
+                const html = `
+                    <a href="${item.link}" target="_blank" class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition block">
+                        <span class="text-[10px] font-bold text-${color}-500 bg-${color}-50 px-2.5 py-1 rounded-md mb-2 inline-block">${tagText}</span>
+                        <h3 class="font-bold text-[14px] text-gray-800 hover:text-${color}-600 mb-1.5 leading-snug line-clamp-2">${title}</h3>
+                        <p class="text-[11px] text-gray-400 font-medium">${publisher} | ${pubDate}</p>
+                    </a>
+                `;
+                container.insertAdjacentHTML('beforeend', html);
+            });
+        }
+
+        // 페이지 로드 시 즉시 뉴스 봇 실행
+        document.addEventListener('DOMContentLoaded', fetchRealTimeNews);
+
+
+        // --- 2. 사이드바 및 모달 제어 로직 ---
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+        const openSidebarBtn = document.getElementById('open-sidebar-btn');
+        const closeSidebarBtn = document.getElementById('close-sidebar-btn');
+        const recentCarBtn = document.getElementById('recent-car-btn'); 
+        
+        const contactModal = document.getElementById('contact-modal');
+        const openContactBtn = document.getElementById('open-contact-btn');
+        const closeContactBtn = document.getElementById('close-contact-btn');
+        const contactForm = document.getElementById('contact-form');
+
+        function openSidebar() {
+            sidebar.classList.replace('sidebar-closed', 'sidebar-open');
+            sidebarOverlay.classList.remove('hidden');
+        }
+        function closeSidebar() {
+            sidebar.classList.replace('sidebar-open', 'sidebar-closed');
+            sidebarOverlay.classList.add('hidden');
+        }
+
+        openSidebarBtn.addEventListener('click', openSidebar);
+        closeSidebarBtn.addEventListener('click', closeSidebar);
+        sidebarOverlay.addEventListener('click', closeSidebar);
+
+        recentCarBtn.addEventListener('click', () => {
+            const recentId = localStorage.getItem('recentCarId');
+            if(recentId && carData.details[recentId]) {
+                window.location.href = `detail.html?id=${recentId}`;
+            } else {
+                alert("아직 조회하신 차량 기록이 없습니다.");
+            }
+        });
+
+        openContactBtn.addEventListener('click', () => {
+            closeSidebar(); 
+            contactModal.classList.remove('hidden');
+        });
+        closeContactBtn.addEventListener('click', () => {
+            contactModal.classList.add('hidden');
+        });
+
+        // 메일 전송
+        contactForm.addEventListener('submit', () => {
+            const email = document.getElementById('contact-email').value.trim();
+            const subject = document.getElementById('contact-subject').value.trim();
+            const msg = document.getElementById('contact-msg').value.trim();
+            
+            const bodyText = `답변 받을 이메일: ${email}\n\n[문의 내용]\n${msg}`;
+            const mailtoLink = `mailto:hke1013@gmail.com?subject=[Useful Car 문의] ${encodeURIComponent(subject)}&body=${encodeURIComponent(bodyText)}`;
+            
+            window.location.href = mailtoLink;
+            
+            contactForm.reset();
+            contactModal.classList.add('hidden');
+        });
+
+        // --- 3. 기존 검색 로직 ---
+        const brandSelect = document.getElementById('brand-select');
+        const modelSelect = document.getElementById('model-select');
+        const genSelect = document.getElementById('gen-select');
+        const searchBtn = document.getElementById('search-btn');
+
+        Object.keys(carData.brands).forEach(key => {
+            const option = document.createElement('option');
+            option.value = key;
+            option.text = carData.brands[key].name;
+            brandSelect.appendChild(option);
+        });
+
+        brandSelect.addEventListener('change', (e) => {
+            const brand = e.target.value;
+            modelSelect.innerHTML = '<option value="" disabled selected>모델 선택</option>';
+            genSelect.innerHTML = '<option value="" disabled selected>세부 모델 (연식)</option>';
+            
+            if(carData.models[brand]) {
+                carData.models[brand].forEach(model => {
+                    const option = document.createElement('option');
+                    option.value = model.id; option.text = model.name;
+                    modelSelect.appendChild(option);
+                });
+            }
+        });
+
+        modelSelect.addEventListener('change', (e) => {
+            const model = e.target.value;
+            genSelect.innerHTML = '<option value="" disabled selected>세부 모델 (연식)</option>';
+            
+            if(carData.generations[model]) {
+                carData.generations[model].forEach(gen => {
+                    const option = document.createElement('option');
+                    option.value = gen.id; option.text = gen.name;
+                    genSelect.appendChild(option);
+                });
+            }
+        });
+
+        searchBtn.addEventListener('click', () => {
+            const genId = genSelect.value;
+            if(!genId) {
+                alert("차량 세부 모델을 끝까지 선택해주세요!");
+                return;
+            }
+            window.location.href = `detail.html?id=${genId}`;
+        });
+    </script>
 </body>
 </html>

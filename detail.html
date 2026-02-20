@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>차량 상세 정보</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+        body { font-family: 'Noto Sans KR', sans-serif; background-color: #e5e7eb; }
+        .accordion-content { display: none; }
+        .accordion-content.active { display: block; }
+    </style>
+</head>
+<body class="antialiased text-gray-800">
+
+    <div class="max-w-md mx-auto bg-white min-h-screen relative shadow-2xl overflow-x-hidden">
+        
+        <header class="sticky top-0 bg-white z-50 border-b px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-3 cursor-pointer" onclick="location.href='index.html'">
+                <i class="fa-solid fa-arrow-left text-gray-600 text-lg"></i>
+                <span class="font-bold text-lg">메인으로</span>
+            </div>
+            <div class="flex gap-4 text-gray-600 text-lg">
+                <i class="fa-solid fa-share-nodes cursor-pointer hover:text-emerald-500"></i>
+            </div>
+        </header>
+
+        <section class="p-6 bg-white border-b">
+            <p id="car-subtitle" class="text-sm text-emerald-600 font-bold mb-1"></p>
+            <h1 id="car-title" class="text-3xl font-bold mb-4 tracking-tight text-gray-900"></h1>
+            <div id="car-tags" class="flex flex-wrap gap-2 mb-2"></div>
+        </section>
+
+        <div class="p-4 bg-gray-50">
+            <h2 class="font-bold text-[17px] mb-3 flex items-center"><i class="fa-solid fa-chart-simple text-emerald-500 mr-2"></i>테크 스펙</h2>
+            <div class="grid grid-cols-3 gap-2 mb-6">
+                <div class="bg-white p-3 rounded-xl text-center shadow-sm border border-gray-100">
+                    <p class="text-[11px] text-gray-500 mb-1">복합 연비</p>
+                    <p class="font-bold text-gray-800 text-lg"><span id="spec-mpg"></span> <span class="text-[10px] text-gray-500 font-normal">km/ℓ</span></p>
+                </div>
+                <div class="bg-white p-3 rounded-xl text-center shadow-sm border border-gray-100">
+                    <p class="text-[11px] text-gray-500 mb-1">최고 출력</p>
+                    <p class="font-bold text-gray-800 text-lg"><span id="spec-power"></span> <span class="text-[10px] text-gray-500 font-normal">hp</span></p>
+                </div>
+                <div class="bg-white p-3 rounded-xl text-center shadow-sm border border-gray-100">
+                    <p class="text-[11px] text-gray-500 mb-1">배기량</p>
+                    <p class="font-bold text-gray-800 text-lg"><span id="spec-cc"></span> <span class="text-[10px] text-gray-500 font-normal">cc</span></p>
+                </div>
+            </div>
+
+            <h2 class="font-bold text-[17px] mb-3 flex items-center"><i class="fa-solid fa-layer-group text-emerald-500 mr-2"></i>트림별 비교</h2>
+            <div id="common-options" class="bg-gray-100 p-3.5 rounded-xl mb-3 text-[13px] text-gray-700 leading-relaxed border border-gray-200 shadow-sm"></div>
+            <div id="trim-container" class="bg-white rounded-xl shadow-sm overflow-hidden mb-6 border border-gray-100"></div>
+
+            <h2 class="font-bold text-[17px] mb-3 flex items-center"><i class="fa-solid fa-magnifying-glass-chart text-emerald-500 mr-2"></i>기술적 장단점</h2>
+            <div class="bg-white p-4 rounded-xl shadow-sm mb-3 border-l-4 border-emerald-500">
+                <h3 class="font-bold text-emerald-600 mb-3 text-sm flex items-center"><i class="fa-solid fa-circle-check mr-1.5"></i>장점 (Pros)</h3>
+                <div id="pros-container"></div>
+            </div>
+            <div class="bg-white p-4 rounded-xl shadow-sm mb-6 border-l-4 border-red-500">
+                <h3 class="font-bold text-red-600 mb-3 text-sm flex items-center"><i class="fa-solid fa-triangle-exclamation mr-1.5"></i>주요 고질병 (Cons)</h3>
+                <div id="cons-container"></div>
+            </div>
+
+            <h2 class="font-bold text-[17px] mb-3 flex items-center"><i class="fa-solid fa-wrench text-emerald-500 mr-2"></i>유지관리 규격표</h2>
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-24 border border-gray-100">
+                <table class="w-full text-sm text-left">
+                    <thead class="bg-gray-50 text-gray-500 text-[11px] uppercase border-b">
+                        <tr><th class="px-4 py-2.5 font-bold">항목</th><th class="px-4 py-2.5 font-bold">규격 / 용량</th><th class="px-4 py-2.5 text-center font-bold">구매</th></tr>
+                    </thead>
+                    <tbody id="maint-container" class="divide-y divide-gray-100"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/data_core.js"></script>
+    <script src="js/data_hyundai.js"></script>
+    <script src="js/data_genesis.js"></script>
+    <script src="js/data_kia.js"></script>
+    <script src="js/data_renault.js"></script>
+    <script src="js/data_chevrolet.js"></script>
+    <script src="js/data_bmw.js"></script>
+    <script src="js/data_benz.js"></script>
+    <script src="js/data_audi.js"></script>
+    <script src="js/data_vw.js"></script>
+    <script src="js/data_volvo.js"></script>
+    <script src="js/data_mini.js"></script>
+
+    <script>
+        function toggleAccordion(id, btn) {
+            const content = document.getElementById(id);
+            const icon = btn.querySelector('i');
+            if (content.classList.contains('active')) {
+                content.classList.remove('active');
+                icon.classList.replace('fa-chevron-up', 'fa-chevron-down');
+                icon.classList.replace('text-emerald-500', 'text-gray-400');
+            } else {
+                content.classList.add('active');
+                icon.classList.replace('fa-chevron-down', 'fa-chevron-up');
+                icon.classList.replace('text-gray-400', 'text-emerald-500');
+            }
+        }
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const id = urlParams.get('id');
+        const data = carData.details[id];
+
+        if(!data) {
+            alert("해당 차량의 상세 데이터가 아직 업데이트되지 않았습니다.");
+            window.location.href = 'index.html';
+        } else {
+            // ✨ 최근 본 차량 기록 저장 (로컬 스토리지) ✨
+            localStorage.setItem('recentCarId', id);
+
+            document.getElementById('car-title').innerText = data.title;
+            document.getElementById('car-subtitle').innerText = data.subtitle;
+            
+            document.getElementById('car-tags').innerHTML = data.tags.map(tag => `<span class="px-2.5 py-1 bg-gray-100 text-gray-600 text-[12px] rounded-md font-bold border border-gray-200">${tag}</span>`).join('');
+            document.getElementById('spec-mpg').innerText = data.specs.mpg;
+            document.getElementById('spec-power').innerText = data.specs.power;
+            document.getElementById('spec-cc').innerText = data.specs.cc;
+
+            document.getElementById('common-options').innerHTML = `<strong class="text-emerald-700 block mb-1.5"><i class="fa-solid fa-check mr-1"></i>전 트림 기본 공통 사양</strong> ${data.commonOptions}`;
+
+            document.getElementById('trim-container').innerHTML = data.trims.map((trim, idx) => `
+                <div class="border-b border-gray-100">
+                    <button class="w-full text-left p-4 flex justify-between items-center ${trim.isRec ? 'bg-emerald-50' : 'bg-white'}" onclick="toggleAccordion('trim_${idx}', this)">
+                        <div class="flex items-center">
+                            <span class="font-bold ${trim.isRec ? 'text-emerald-800' : 'text-gray-800'}">${trim.name}</span>
+                            ${trim.isRec ? '<span class="bg-emerald-500 text-white text-[10px] px-1.5 py-0.5 rounded ml-1.5 font-bold">추천</span>' : ''}
+                            <span class="text-[13px] text-gray-500 ml-2">${trim.price}</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-${trim.isRec ? 'up text-emerald-500' : 'down text-gray-400'} text-sm"></i>
+                    </button>
+                    <div id="trim_${idx}" class="accordion-content ${trim.isRec ? 'active' : ''} px-4 pb-4 text-[13px] text-gray-600 ${trim.isRec ? 'bg-emerald-50' : 'bg-gray-50'}">
+                        ${trim.options}
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('pros-container').innerHTML = data.pros.map(pro => `
+                <div class="mb-3"><p class="text-[14px] font-bold text-gray-800 mb-0.5">${pro.title}</p><p class="text-[13px] text-gray-500 leading-snug">${pro.desc}</p></div>
+            `).join('');
+
+            document.getElementById('cons-container').innerHTML = data.cons.map(con => `
+                <div class="mb-3"><div class="flex justify-between items-center mb-0.5"><p class="text-[14px] font-bold text-gray-800">${con.title}</p><span class="text-red-500 text-xs">${con.severity}</span></div><p class="text-[13px] text-gray-500 leading-snug">${con.desc}</p></div>
+            `).join('');
+
+            document.getElementById('maint-container').innerHTML = data.maintenance.map(m => `
+                <tr>
+                    <td class="px-4 py-3 font-bold text-gray-700">${m.name}</td>
+                    <td class="px-4 py-3 text-gray-500 text-[13px]">${m.spec}</td>
+                    <td class="px-4 py-3 text-center">
+                        <a href="https://search.shopping.naver.com/search/all?query=${encodeURIComponent(m.search)}" target="_blank" class="bg-white text-gray-700 px-3 py-1.5 rounded text-[11px] font-bold border border-gray-300 shadow-sm hover:bg-gray-50 inline-block">최저가 <i class="fa-solid fa-angle-right text-[10px]"></i></a>
+                    </td>
+                </tr>
+            `).join('');
+        }
+    </script>
+</body>
+</html>
