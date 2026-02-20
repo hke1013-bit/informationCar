@@ -9,65 +9,288 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
         body { font-family: 'Noto Sans KR', sans-serif; background-color: #f8fafc; }
+        .modal { display: none; }
+        .modal.active { display: flex; }
     </style>
 </head>
 <body class="antialiased text-gray-800">
 
     <div class="max-w-2xl mx-auto bg-white min-h-screen relative shadow-xl overflow-x-hidden flex flex-col">
         
+        <!-- 헤더 -->
         <header class="bg-white px-6 py-5 flex justify-between items-center sticky top-0 z-50 shadow-sm rounded-b-3xl mb-2 shrink-0">
             <div class="flex items-center gap-3 cursor-pointer" onclick="location.href='index.html'">
                 <i class="fa-solid fa-arrow-left text-gray-600 text-lg"></i>
                 <span class="font-bold text-lg text-emerald-600">요청사항 게시판</span>
             </div>
-            <div class="w-10 h-10 bg-emerald-50 rounded-full flex items-center justify-center cursor-pointer hover:bg-emerald-100 transition shadow-sm text-emerald-600">
+            <button onclick="openWriteModal()" class="w-10 h-10 bg-emerald-50 rounded-full flex items-center justify-center cursor-pointer hover:bg-emerald-100 transition shadow-sm text-emerald-600">
                 <i class="fa-solid fa-pen-to-square"></i>
-            </div>
+            </button>
         </header>
 
-        <section class="px-5 py-6 shrink-0 bg-emerald-50 mb-4 mx-4 rounded-3xl mt-4 border border-emerald-100">
+        <!-- 공지 및 안내 -->
+        <section class="px-5 pt-4">
+            <div class="bg-amber-50 border border-amber-100 rounded-2xl p-4 mb-4">
+                <h3 class="text-amber-800 font-bold text-sm mb-1.5 flex items-center">
+                    <i class="fa-solid fa-circle-exclamation mr-1.5"></i>게시판 이용 안내 및 공지
+                </h3>
+                <ul class="text-[12px] text-amber-700 space-y-1 opacity-90">
+                    <li>• 차량 정보 업데이트 요청 전용 게시판입니다.</li>
+                    <li>• <span class="font-bold text-red-600">욕설, 비방, 광고, 성인물</span> 등 부적절한 게시물은 통보 없이 삭제 및 이용이 제한될 수 있습니다.</li>
+                    <li>• 비공개 게시물은 본인이 설정한 비밀번호로만 확인/수정/삭제가 가능합니다.</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="px-5 py-6 shrink-0 bg-emerald-50 mb-4 mx-4 rounded-3xl border border-emerald-100">
             <h1 class="text-xl font-bold mb-2 text-emerald-800 leading-snug">차량 정보가 부족한가요?</h1>
             <p class="text-[14px] text-emerald-600 mb-0">찾으시는 차량의 정보가 없다면 여기에 남겨주세요.<br>운영자가 확인 후 빠르게 업데이트하겠습니다!</p>
         </section>
 
+        <!-- 게시물 목록 -->
         <section class="px-5 py-4 flex-1">
             <div class="flex justify-between items-center mb-4 px-1">
                 <h2 class="font-bold text-gray-700">최근 요청 목록</h2>
-                <span class="text-xs text-gray-400 font-medium">실시간 업데이트</span>
+                <span id="post-count" class="text-xs text-gray-400 font-medium">로딩 중...</span>
             </div>
 
-            <div id="board-list" class="space-y-3">
-                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition cursor-pointer">
-                    <div class="flex justify-between items-start mb-2">
-                        <span class="text-[10px] font-bold text-emerald-500 bg-emerald-50 px-2.5 py-1 rounded-md">업데이트 완료</span>
-                        <span class="text-[11px] text-gray-400">2026.02.18</span>
-                    </div>
-                    <h3 class="font-bold text-[15px] text-gray-800 mb-1">제네시스 GV70 페이스리프트 정보 부탁드려요!</h3>
-                    <p class="text-[13px] text-gray-500 line-clamp-1">새로 나온 모델이라 고질병 정보가 궁금합니다.</p>
-                </div>
-
-                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition cursor-pointer">
-                    <div class="flex justify-between items-start mb-2">
-                        <span class="text-[10px] font-bold text-amber-500 bg-amber-50 px-2.5 py-1 rounded-md">검토 중</span>
-                        <span class="text-[11px] text-gray-400">2026.02.19</span>
-                    </div>
-                    <h3 class="font-bold text-[15px] text-gray-800 mb-1">BMW i4 M50 모델 소모품 규격이 궁금합니다.</h3>
-                    <p class="text-[13px] text-gray-500 line-clamp-1">전기차는 오일류 말고 어떤 걸 점검해야 할까요?</p>
-                </div>
-
-                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition cursor-pointer text-center py-10 border-dashed border-2">
-                    <i class="fa-solid fa-plus text-gray-300 text-3xl mb-3"></i>
-                    <p class="text-gray-400 text-sm font-medium">더 많은 요청사항을 기다리고 있습니다.</p>
-                </div>
+            <div id="board-list" class="space-y-3 pb-24">
+                <!-- 게시물이 여기에 렌더링됩니다. -->
             </div>
         </section>
 
+        <!-- 하단 작성 버튼 -->
         <div class="p-5 sticky bottom-0 bg-white border-t border-gray-100 rounded-t-3xl shadow-[0_-5px_20px_rgba(0,0,0,0.05)]">
-            <button onclick="alert('문의하기 모달을 준비 중입니다.')" class="w-full bg-emerald-500 text-white font-bold py-4 rounded-2xl shadow-lg hover:bg-emerald-600 transition-all text-[16px]">
+            <button onclick="openWriteModal()" class="w-full bg-emerald-500 text-white font-bold py-4 rounded-2xl shadow-lg hover:bg-emerald-600 transition-all text-[16px]">
                 새 요청글 작성하기
             </button>
         </div>
     </div>
 
+    <!-- 글 작성/수정 모달 -->
+    <div id="write-modal" class="modal fixed inset-0 bg-black bg-opacity-50 z-[100] items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="bg-emerald-500 p-4 text-white flex justify-between items-center">
+                <h3 id="modal-title" class="font-bold text-lg">요청글 작성</h3>
+                <button onclick="closeModal('write-modal')" class="text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto">
+                <input type="hidden" id="post-id">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1 ml-1">제목</label>
+                        <input type="text" id="post-title" placeholder="차량명과 요청 내용을 적어주세요." class="w-full bg-gray-50 border border-gray-200 p-3 rounded-xl outline-none focus:ring-2 focus:ring-emerald-100">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1 ml-1">상세 내용</label>
+                        <textarea id="post-content" rows="4" placeholder="궁금하신 세부 모델이나 정보를 적어주세요." class="w-full bg-gray-50 border border-gray-200 p-3 rounded-xl outline-none focus:ring-2 focus:ring-emerald-100 resize-none"></textarea>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1 ml-1">비밀번호 (수정/삭제용)</label>
+                            <input type="password" id="post-pw" placeholder="4자리 숫자" class="w-full bg-gray-50 border border-gray-200 p-3 rounded-xl outline-none focus:ring-2 focus:ring-emerald-100">
+                        </div>
+                        <div class="flex items-end pb-3">
+                            <label class="flex items-center cursor-pointer">
+                                <input type="checkbox" id="post-secret" class="w-4 h-4 text-emerald-500 border-gray-300 rounded focus:ring-emerald-500">
+                                <span class="ml-2 text-sm text-gray-600 font-medium">비공개 설정</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="savePost()" class="w-full bg-emerald-500 text-white font-bold py-4 rounded-xl mt-6 shadow-md hover:bg-emerald-600 transition-all">
+                    등록하기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 비밀번호 확인 모달 -->
+    <div id="pw-modal" class="modal fixed inset-0 bg-black bg-opacity-50 z-[110] items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-xl w-full max-w-xs overflow-hidden">
+            <div class="p-6 text-center">
+                <h3 class="font-bold text-lg mb-2">비밀번호 확인</h3>
+                <p class="text-sm text-gray-500 mb-4">게시물 작성 시 설정한<br>비밀번호를 입력해주세요.</p>
+                <input type="password" id="check-pw" class="w-full bg-gray-50 border border-gray-200 p-3 rounded-xl outline-none text-center text-lg tracking-widest mb-4 focus:ring-2 focus:ring-emerald-100" maxlength="4">
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="closeModal('pw-modal')" class="bg-gray-100 text-gray-600 font-bold py-3 rounded-xl">취소</button>
+                    <button id="pw-confirm-btn" class="bg-emerald-500 text-white font-bold py-3 rounded-xl shadow-sm">확인</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 게시판 데이터 관리 (localStorage 사용)
+        let posts = JSON.parse(localStorage.getItem('carBoardPosts')) || [
+            { id: 1, title: '제네시스 GV70 페이스리프트 정보 부탁드려요!', content: '새로 나온 모델이라 고질병 정보가 궁금합니다.', date: '2026.02.18', status: '완료', secret: false, pw: '1234' },
+            { id: 2, title: 'BMW i4 M50 모델 소모품 규격이 궁금합니다.', content: '전기차는 오일류 말고 어떤 걸 점검해야 할까요?', date: '2026.02.19', status: '검토 중', secret: true, pw: '1111' }
+        ];
+
+        // 금지어 필터링 리스트
+        const badWords = ['욕설', '비방', '광고', '성인', '섹스', 'sex', '도박', '바카라', '알바']; // 예시 리스트
+
+        function renderPosts() {
+            const list = document.getElementById('board-list');
+            const count = document.getElementById('post-count');
+            list.innerHTML = '';
+            count.innerText = `총 ${posts.length}건`;
+
+            posts.sort((a, b) => b.id - a.id).forEach(post => {
+                const isSecret = post.secret;
+                const html = `
+                    <div onclick="handlePostClick(${post.id})" class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition cursor-pointer relative overflow-hidden">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-[10px] font-bold ${post.status === '완료' ? 'text-emerald-500 bg-emerald-50' : 'text-amber-500 bg-amber-50'} px-2.5 py-1 rounded-md">${post.status}</span>
+                            <span class="text-[11px] text-gray-400">${post.date}</span>
+                        </div>
+                        <h3 class="font-bold text-[15px] text-gray-800 mb-1 flex items-center">
+                            ${isSecret ? '<i class="fa-solid fa-lock text-gray-400 mr-1.5 text-xs"></i>' : ''}
+                            ${isSecret ? '비공개 요청글입니다.' : post.title}
+                        </h3>
+                        <p class="text-[13px] text-gray-500 line-clamp-1">
+                            ${isSecret ? '비밀번호 입력 후 확인 가능합니다.' : post.content}
+                        </p>
+                        ${!isSecret ? `
+                        <div class="mt-3 pt-3 border-t border-gray-50 flex justify-end gap-3">
+                            <button onclick="event.stopPropagation(); checkAuth(${post.id}, 'edit')" class="text-[11px] font-bold text-gray-400 hover:text-emerald-600"><i class="fa-solid fa-pen mr-1"></i>수정</button>
+                            <button onclick="event.stopPropagation(); checkAuth(${post.id}, 'delete')" class="text-[11px] font-bold text-gray-400 hover:text-red-500"><i class="fa-solid fa-trash mr-1"></i>삭제</button>
+                        </div>
+                        ` : ''}
+                    </div>
+                `;
+                list.insertAdjacentHTML('beforeend', html);
+            });
+        }
+
+        function openWriteModal(postId = null) {
+            const modal = document.getElementById('write-modal');
+            const titleInput = document.getElementById('post-title');
+            const contentInput = document.getElementById('post-content');
+            const pwInput = document.getElementById('post-pw');
+            const secretInput = document.getElementById('post-secret');
+            const idInput = document.getElementById('post-id');
+            const modalTitle = document.getElementById('modal-title');
+
+            if (postId) {
+                const post = posts.find(p => p.id === postId);
+                idInput.value = post.id;
+                titleInput.value = post.title;
+                contentInput.value = post.content;
+                pwInput.value = post.pw;
+                secretInput.checked = post.secret;
+                modalTitle.innerText = '요청글 수정';
+            } else {
+                idInput.value = '';
+                titleInput.value = '';
+                contentInput.value = '';
+                pwInput.value = '';
+                secretInput.checked = false;
+                modalTitle.innerText = '요청글 작성';
+            }
+
+            modal.classList.add('active');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        function filterText(text) {
+            let filtered = text;
+            badWords.forEach(word => {
+                const reg = new RegExp(word, 'gi');
+                if (reg.test(filtered)) {
+                    filtered = filtered.replace(reg, '***');
+                }
+            });
+            return filtered;
+        }
+
+        function savePost() {
+            const id = document.getElementById('post-id').value;
+            let title = document.getElementById('post-title').value.trim();
+            let content = document.getElementById('post-content').value.trim();
+            const pw = document.getElementById('post-pw').value.trim();
+            const secret = document.getElementById('post-secret').checked;
+
+            if (!title || !content || !pw) {
+                alert("모든 항목을 입력해주세요.");
+                return;
+            }
+
+            // 필터링 적용
+            const filteredTitle = filterText(title);
+            const filteredContent = filterText(content);
+
+            if (title !== filteredTitle || content !== filteredContent) {
+                alert("부적절한 단어가 포함되어 있어 자동으로 필터링되었습니다.");
+            }
+
+            if (id) {
+                // 수정
+                const idx = posts.findIndex(p => p.id == id);
+                posts[idx] = { ...posts[idx], title: filteredTitle, content: filteredContent, pw, secret };
+            } else {
+                // 신규 등록
+                const newPost = {
+                    id: Date.now(),
+                    title: filteredTitle,
+                    content: filteredContent,
+                    date: new Date().toISOString().split('T')[0].replace(/-/g, '.'),
+                    status: '검토 중',
+                    secret,
+                    pw
+                };
+                posts.push(newPost);
+            }
+
+            localStorage.setItem('carBoardPosts', JSON.stringify(posts));
+            closeModal('write-modal');
+            renderPosts();
+        }
+
+        function checkAuth(id, action) {
+            const post = posts.find(p => p.id == id);
+            const pwModal = document.getElementById('pw-modal');
+            const pwInput = document.getElementById('check-pw');
+            const confirmBtn = document.getElementById('pw-confirm-btn');
+
+            pwInput.value = '';
+            pwModal.classList.add('active');
+            pwInput.focus();
+
+            confirmBtn.onclick = () => {
+                if (pwInput.value === post.pw) {
+                    closeModal('pw-modal');
+                    if (action === 'delete') {
+                        if (confirm('정말로 삭제하시겠습니까?')) {
+                            posts = posts.filter(p => p.id != id);
+                            localStorage.setItem('carBoardPosts', JSON.stringify(posts));
+                            renderPosts();
+                        }
+                    } else if (action === 'edit') {
+                        openWriteModal(id);
+                    } else if (action === 'view') {
+                        alert(`[내용 상세]\n\n제목: ${post.title}\n내용: ${post.content}`);
+                    }
+                } else {
+                    alert('비밀번호가 일치하지 않습니다.');
+                }
+            };
+        }
+
+        function handlePostClick(id) {
+            const post = posts.find(p => p.id == id);
+            if (post.secret) {
+                checkAuth(id, 'view');
+            } else {
+                alert(`[내용 상세]\n\n제목: ${post.title}\n내용: ${post.content}`);
+            }
+        }
+
+        // 초기 렌더링
+        renderPosts();
+    </script>
 </body>
 </html>
